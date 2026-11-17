@@ -19,13 +19,18 @@ export default function HRAttendanceMonitoring() {
   const router = useRouter();
   const [records, setRecords] = useState<AttendanceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState("");
   const [search, setSearch] = useState("");
+
+  // কম্পোনেন্ট মাউন্ট হওয়ার পর ক্লায়েন্ট সাইডে আজকের তারিখ সেট করা হচ্ছে
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedDate(today);
+  }, []);
 
   // ডেটা ফেচ ফাংশন
   const fetchAttendance = async (date: string) => {
+    if (!date) return;
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -47,7 +52,9 @@ export default function HRAttendanceMonitoring() {
   };
 
   useEffect(() => {
-    fetchAttendance(selectedDate);
+    if (selectedDate) {
+      fetchAttendance(selectedDate);
+    }
   }, [selectedDate]);
 
   // সার্চ ফিল্টারিং
@@ -69,10 +76,10 @@ export default function HRAttendanceMonitoring() {
         {/* Top Header Section with Back Button */}
         <div className="bg-[#0b111e] border border-slate-800 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col gap-6">
           
-          {/* 🌟 New: Back Button */}
+          {/* Back Button */}
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
             <Link
-              href="/hr/dashboard" // আপনার HR ড্যাশবোর্ডের রুট অনুযায়ী চেঞ্জ করতে পারেন (যেমন: /hr বা /admin)
+              href="/hr/dashboard"
               className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/60 hover:border-slate-600 text-slate-300 hover:text-white rounded-2xl text-xs font-semibold transition-all duration-200 active:scale-95 shadow-md"
             >
               <svg 
@@ -89,7 +96,7 @@ export default function HRAttendanceMonitoring() {
 
             {/* Quick Refresh Icon Button */}
             <button
-              onClick={() => fetchAttendance(selectedDate)}
+              onClick={() => selectedDate && fetchAttendance(selectedDate)}
               className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-slate-400 hover:text-white transition active:scale-95"
               title="রিফ্রেশ করুন"
             >
@@ -107,7 +114,7 @@ export default function HRAttendanceMonitoring() {
                 HR Attendance Monitoring Portal
               </h1>
               <p className="text-slate-400 text-xs md:text-sm mt-1">
-                কর্মীদের দৈনিক উপস্থিতি, প্রবেশ ও প্রস্থানের সময় লাইভ পর্যবেক্ষণ করুন।
+                কর্মীদের দৈনিক উপস্থিতি, প্রবেশ ও প্রস্থানের সময় লাইভ পর্যবেক্ষণ করুন।
               </p>
             </div>
 
@@ -146,7 +153,7 @@ export default function HRAttendanceMonitoring() {
           <div className="relative w-full md:w-80">
             <input
               type="text"
-              placeholder="নাম বা EMP ID দিয়ে খুঁজুন..."
+              placeholder="নাম বা EMP ID দিয়ে খুঁজুন..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-[#0b111e] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
@@ -177,14 +184,14 @@ export default function HRAttendanceMonitoring() {
                 ) : filteredRecords.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-500">
-                      এই তারিখে কোনো হাজিরা রেকর্ড পাওয়া যায়নি।
+                      এই তারিখে কোনো হাজিরা রেকর্ড পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
                   filteredRecords.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-900/40 transition">
                       <td className="py-4 px-6 font-semibold text-white">
-                        {item.employee_name || "নাম পাওয়া যায়নি"}
+                        {item.employee_name || "নাম পাওয়া যায়নি"}
                       </td>
                       <td className="py-4 px-6 font-mono text-blue-400 font-semibold">
                         {item.emp_id}
